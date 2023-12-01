@@ -1,10 +1,12 @@
-subroutine first_spelled_digit(s, out, outi)
+subroutine spelled_digit(s, out, outi, first)
   implicit none
   integer, intent(out) :: out, outi
   integer :: i, j, length
   character(100) :: substring
   character(*), intent(in) :: s
+  logical, intent(in) :: first
   character(10), dimension(0:9) :: numbers
+  integer :: starti, endi, inc
   numbers(0) = 'zero'
   numbers(1) = 'one'
   numbers(2) = 'two'
@@ -15,42 +17,19 @@ subroutine first_spelled_digit(s, out, outi)
   numbers(7) = 'seven'
   numbers(8) = 'eight'
   numbers(9) = 'nine'
-  outi =10000
-  
-  outer: do i = 0, len(s), 1
-    do j = 0, 9, 1
-      length = len(trim(numbers(j)))
-      substring = s(i:(i+length-1))
-      if (trim(substring) == trim(numbers(j))) then
-        out = j
-        outi = i
-        exit outer
-      end if
-    end do
-  end do outer
-end subroutine
-
-subroutine last_spelled_digit(s, out, outi)
-  implicit none
-  integer, intent(out) :: out, outi
-  integer :: i, j, length
-  character(100) :: substring
-  character(*), intent(in) :: s
-  character(10), dimension(0:9) :: numbers
-  numbers(0) = 'zero'
-  numbers(1) = 'one'
-  numbers(2) = 'two'
-  numbers(3) = 'three'
-  numbers(4) = 'four'
-  numbers(5) = 'five'
-  numbers(6) = 'six'
-  numbers(7) = 'seven'
-  numbers(8) = 'eight'
-  numbers(9) = 'nine'
-  out = -1
   outi = -1
-  
-  outer: do i = len(s), 0, -1
+  starti = len(s)
+  endi = 0
+  inc = -1
+
+  if (first) then
+    outi =10000
+    starti = 0
+    endi = len(s)
+    inc = 1
+  end if
+
+  outer: do i = starti, endi, inc
     do j = 0, 9, 1
       length = len(trim(numbers(j)))
       substring = s(i:(i+length-1))
@@ -63,38 +42,29 @@ subroutine last_spelled_digit(s, out, outi)
   end do outer
 end subroutine
 
-subroutine find_first_digit(s, out, outi) 
+subroutine find_digit(s, out, outi, first) 
   implicit none
   integer, intent(out) :: out, outi
   integer :: i, j
   character(*), intent(in) :: s
+  logical, intent(in) :: first
+  integer :: starti, endi, inc
   character(10) :: digitss
   outi = 10000
   digitss = '0123456789'
-  outer: do i = 1, len(s)-1
+
+  starti = len(s)-1
+  endi = 1
+  inc = -1
+  if (first) then
+    starti = 1
+    endi = len(s)-1
+    inc = 1
+  end if
+  outer: do i = starti, endi, inc
     do j = 0, 10, 1
       if (s(i:i) == digitss(j:j)) then
         out = j-1
-        outi = i
-        exit outer
-      end if
-    end do
-  end do outer
-end subroutine
-
-subroutine find_last_digit(s, out, outi)
-  implicit none
-  integer, intent(out) :: out, outi
-  integer :: i, j
-  character(*), intent(in) :: s
-  character(100) :: digitss
-  outi = -1
-
-  digitss = '0123456789'
-  outer: do i = len(s), 0, -1
-    do j = 0, 10, 1
-      if (s(i:i) == digitss(j:j)) then
-        out = j - 1
         outi = i
         exit outer
       end if
@@ -122,25 +92,13 @@ program aoc01
             stop
           end if
         end if
-        write(*,*) 'Read line: ', trim(line)
 
-        call find_first_digit(line, first_d, first_d_i)
-        call find_last_digit(line, last_d, last_d_i)
+        call find_digit(line, first_d, first_d_i, .true.)
+        call find_digit(line, last_d, last_d_i, .false.)
 
-        call first_spelled_digit(line, first_w, first_w_i)
-        call last_spelled_digit(line, last_w, last_w_i)
+        call spelled_digit(line, first_w, first_w_i, .true.)
+        call spelled_digit(line, last_w, last_w_i, .false.)
 
-        write (*,*) 'fd', first_d
-        write (*,*) 'fdi', first_d_i
-        write (*,*) 'ld', last_d
-        write (*,*) 'ldi', last_d_i
-        write (*,*) 'fw', first_w
-        write (*,*) 'fwi', first_w_i
-        write (*,*) 'lw', last_w
-        write (*,*) 'lwi', last_w_i
-
-
-        
         if (first_d_i < first_w_i) then
           first = first_d
         else 
@@ -156,6 +114,6 @@ program aoc01
         res = (first * 10) + last
         sum = sum + res
       end do
-      write(*,*) sum
+      write(*,'(I0)') sum
       close(unit_number, status='keep')
 end program
